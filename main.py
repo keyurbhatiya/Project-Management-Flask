@@ -1,5 +1,6 @@
-from flask import Flask, render_template, request, redirect, flash
+from flask import Flask, render_template, request, redirect, flash,session
 from flask import Flask, make_response, redirect, url_for, flash
+from werkzeug.security import check_password_hash, generate_password_hash
 import mysql.connector
 from mysql.connector import Error
 from datetime import datetime
@@ -19,6 +20,8 @@ from reportlab.lib.units import inch
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'  # Required for flash messages
 
+
+
 # Function to establish a DB connection
 def get_db_connection():
     try:
@@ -33,6 +36,80 @@ def get_db_connection():
     except Error as e:
         app.logger.error(f"Database connection failed: {e}")
         return None
+
+# Route to render the login page
+@app.route('/')
+def home():
+    return render_template('login.html')
+
+# Route to handle login form submission
+@app.route('/login', methods=['POST'])
+def login():
+    email = request.form['email']
+    password = request.form['password']
+    
+    # Check if the email exists and the password matches
+    if email == "keyur@admin.com" and password == "keyur@password":
+        session['user'] = email  # Store user in session
+        flash('Login successful!', 'success')
+        return redirect(url_for('dashboard'))
+    else:
+        flash('Invalid email or password. Please try again.', 'danger')
+        return redirect(url_for('home'))
+
+
+
+
+# Route for a protected dashboard page
+@app.route('/dashboard')
+def dashboard():
+    connection = None
+    try:
+        connection = get_db_connection()
+        if not connection:
+            app.logger.error("Database connection failed!")
+            return render_template('error.html', error_message="Unable to connect to the database. Please try again later.")
+
+        cursor = connection.cursor(dictionary=True)
+
+        # Fetch data from the projects table
+        cursor.execute("SELECT * FROM projects")
+        projects = cursor.fetchall()
+
+        # Fetch members for each project
+        cursor.execute("SELECT * FROM members")
+        members = cursor.fetchall()
+
+        # Group members by group_number
+        grouped_members = {}
+        for member in members:
+            group = member.get('group_number')
+            if group not in grouped_members:
+                grouped_members[group] = []
+            grouped_members[group].append(member)
+
+        return render_template('data_table.html', projects=projects, grouped_members=grouped_members)
+    except Error as e:
+        app.logger.error(f"Error fetching project data: {e}")
+        return render_template('error.html', error_message="An error occurred while fetching project data."),url_for('logout')
+    finally:
+        if connection and connection.is_connected():
+            cursor.close()
+            connection.close()
+
+
+
+# Route to logout
+@app.route('/logout')
+def logout():
+    session.pop('user', None)
+    flash('You have been logged out.', 'info')
+    return redirect(url_for('home'))
+
+
+
+
+
     
 
 # Custom filter to format datetime
@@ -88,7 +165,7 @@ def insert_member():
             cursor.close()
             connection.close()
 
-    return redirect('/')
+    return redirect('/dashboard')
 
 
 
@@ -123,7 +200,7 @@ def insert_project():
         # Validate project data
         if not group_number or not project_name or member_count <= 0:
             flash('Invalid project data. Please check your inputs.', 'danger')
-            return redirect('/')
+            return redirect('/dashboard')
 
         connection = get_db_connection()
         if not connection:
@@ -169,7 +246,7 @@ def insert_project():
             cursor.close()
             connection.close()
 
-    return redirect('/')
+    return redirect('/dashboard')
 
 
 
@@ -233,7 +310,7 @@ def edit_project(group_number):
 
             connection.commit()
             flash('Project updated successfully!', 'success')
-            return redirect('/')
+            return redirect('/dashboard')
 
         # Handle GET request to fetch project data
         cursor.execute("SELECT * FROM projects WHERE group_number = %s", (group_number,))
@@ -244,7 +321,7 @@ def edit_project(group_number):
 
         if not project:
             flash('Project not found!', 'danger')
-            return redirect('/view_projects')
+            return redirect('/dashboard')
 
         # Ensure deliverables is not None
         project['deliverables'] = project['deliverables'] or ''
@@ -260,7 +337,7 @@ def edit_project(group_number):
             cursor.close()
             connection.close()
 
-    return redirect('/')
+    return redirect('/dashboard')
 
 
 
@@ -289,13 +366,13 @@ def delete_project(group_number):
             cursor.close()
             connection.close()
 
-    return redirect('/')
+    return redirect('/dashboard')
 
 
 
-# Route to display project data
-@app.route('/')
-def display_data():
+# # Route to display project data
+# @app.route('/view-data')
+# def display_data():
     try:
         connection = get_db_connection()
         if not connection:
@@ -350,7 +427,7 @@ def view_members(group_number):
     except Error as e:
         app.logger.error(f"Error fetching members: {e}")
         flash('An error occurred while fetching members.', 'danger')
-        return redirect('/')
+        return redirect('/dashboard')
     finally:
         cursor.close()
         connection.close()
@@ -483,7 +560,7 @@ def export_data(format):
         app.logger.error(f"Error exporting data: {e}")
         flash('An error occurred while exporting the data.', 'danger')
         print(e)
-        return redirect('/')
+        return redirect('/dashboard')
     
     finally:
         # Ensure proper cleanup
@@ -605,11 +682,11 @@ def export_all_projects_pdf():
     except mysql.connector.Error as e:
         app.logger.error(f"Database error in PDF export: {e}")
         flash('Failed to export PDF. Database error occurred.', 'danger')
-        return redirect('/')
+        return redirect('/dashboard')
     except Exception as e:
         app.logger.error(f"Unexpected error in PDF export: {e}")
         flash('An unexpected error occurred during PDF export.', 'danger')
-        return redirect('/')
+        return redirect('/dashboard')
 
 # Route to trigger PDF export for all projects
 @app.route('/export_all_projects_pdf')
