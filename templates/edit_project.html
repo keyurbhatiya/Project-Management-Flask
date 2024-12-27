@@ -67,10 +67,16 @@
                                     </div>
                                 </div>
 
-                                <!-- Status and Notes -->
+                                  <!-- Status and Notes -->
                                 <div class="col-md-6">
-                                    <label for="status" class="form-label">Status</label>
-                                    <input type="text" class="form-control" id="status" name="status" value="{{ project.status }}">
+                                    <label for="statusFilter" class="form-label">Status</label>
+                                    <select id="statusFilter" class="form-select w-auto" name="status">
+                                        <option value="">All Statuses</option>
+                                        <option value="Completed" {% if project.status=='Completed' %}selected{% endif
+                                            %}>Completed</option>
+                                        <option value="In Progress" {% if project.status=='In Progress' %}selected{%
+                                            endif %}>In Progress</option>
+                                    </select>
                                 </div>
                                 <div class="col-md-6">
                                     <label for="datetime" class="form-label">Submission Date/Time</label>
