@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,6 +14,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="container py-5">
         <div class="row justify-content-center">
@@ -50,18 +52,20 @@
                                     <label class="form-label">Deliverables</label>
                                     <div class="d-flex gap-3">
                                         <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" id="ppt" name="ppt" value="PPT"
-                                                {% if 'PPT' in project.deliverables %}checked{% endif %}>
+                                            <input class="form-check-input" type="checkbox" id="ppt" name="ppt"
+                                                value="PPT" {% if 'PPT' in project.deliverables %}checked{% endif %}>
                                             <label class="form-check-label" for="ppt">PPT</label>
                                         </div>
                                         <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" id="wordfile" name="wordfile"
-                                                value="Word File" {% if 'Word File' in project.deliverables %}checked{% endif %}>
+                                            <input class="form-check-input" type="checkbox" id="wordfile"
+                                                name="wordfile" value="Word File" {% if 'Word File' in
+                                                project.deliverables %}checked{% endif %}>
                                             <label class="form-check-label" for="wordfile">Word File</label>
                                         </div>
                                         <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" id="database" name="database"
-                                                value="Database" {% if 'Database' in project.deliverables %}checked{% endif %}>
+                                            <input class="form-check-input" type="checkbox" id="database"
+                                                name="database" value="Database" {% if 'Database' in
+                                                project.deliverables %}checked{% endif %}>
                                             <label class="form-check-label" for="database">Database</label>
                                         </div>
                                     </div>
@@ -69,9 +73,16 @@
 
                                 <!-- Status and Notes -->
                                 <div class="col-md-6">
-                                    <label for="status" class="form-label">Status</label>
-                                    <input type="text" class="form-control" id="status" name="status" value="{{ project.status }}">
+                                    <label for="statusFilter" class="form-label">Status</label>
+                                    <select id="statusFilter" class="form-select w-auto" name="status">
+                                        <option value="">All Statuses</option>
+                                        <option value="Completed" {% if project.status=='Completed' %}selected{% endif
+                                            %}>Completed</option>
+                                        <option value="In Progress" {% if project.status=='In Progress' %}selected{%
+                                            endif %}>In Progress</option>
+                                    </select>
                                 </div>
+
                                 <div class="col-md-6">
                                     <label for="datetime" class="form-label">Submission Date/Time</label>
                                     <input type="datetime-local" class="form-control" id="datetime" name="datetime"
@@ -80,7 +91,8 @@
 
                                 <div class="col-12">
                                     <label for="msg" class="form-label">Notes</label>
-                                    <textarea class="form-control" id="msg" name="msg" rows="3">{{ project.notes }}</textarea>
+                                    <textarea class="form-control" id="msg" name="msg"
+                                        rows="3">{{ project.notes }}</textarea>
                                 </div>
 
                                 <!-- Member Details -->
@@ -88,9 +100,9 @@
                                     <label for="memberCount" class="form-label required-label">Member Count</label>
                                     <select id="memberCount" name="memberCount" class="form-select" required>
                                         <option value="" disabled selected>Choose...</option>
-                                        <option value="1" {% if project.member_count == 1 %}selected{% endif %}>1</option>
-                                        <option value="2" {% if project.member_count == 2 %}selected{% endif %}>2</option>
-                                        <option value="3" {% if project.member_count == 3 %}selected{% endif %}>3</option>
+                                        <option value="1" {% if project.member_count==1 %}selected{% endif %}>1</option>
+                                        <option value="2" {% if project.member_count==2 %}selected{% endif %}>2</option>
+                                        <option value="3" {% if project.member_count==3 %}selected{% endif %}>3</option>
                                     </select>
                                     <div class="invalid-feedback">Please select number of members</div>
                                 </div>
@@ -136,11 +148,11 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // Basic form validation
-        (function() {
+        (function () {
             'use strict';
-            window.addEventListener('load', function() {
+            window.addEventListener('load', function () {
                 var form = document.getElementById('projectEditForm');
-                form.addEventListener('submit', function(event) {
+                form.addEventListener('submit', function (event) {
                     if (!form.checkValidity()) {
                         event.preventDefault();
                         event.stopPropagation();
@@ -151,4 +163,5 @@
         })();
     </script>
 </body>
+
 </html>
